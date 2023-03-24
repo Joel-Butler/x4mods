@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mdscript name="jbm_test_menu" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="md.xsd">
+	<cues>
+        <cue name="jbm_test_menu_entrance" instantiate="true" >
+			<conditions>
+				<check_any>
+					<event_conversation_next_section section="g_mainmore" />
+					<event_conversation_returned_to_section section="g_mainmore" />
+				</check_any>
+				<check_value value="event.object.trueowner" exact="faction.player" />
+			</conditions>
+			<actions>
+				<add_player_choice_sub text="{356001,1}" position="top_right" section="jbm_test_menu" comment="Entrance"/>
+				<add_player_choice_return	text="{1002,20}" comment="(back)"/>
+			</actions>
+		</cue>
+        <!-- Don't need this right now 
+		<cue name="jbm_test_Backdoor" namespace="this" instantiate="true" >
+			<conditions>
+				<event_player_changed_activity />
+				<check_value value="player.ship" />
+			</conditions>
+			<actions>
+				<do_if value="event.param2 == activity.scan_longrange">
+					<start_conversation actor="player.computer" conversation="jbm_test_menu" comment=""/>-->
+					<!-- <signal_cue_instantly cue="jbm_test_menu"/> -->
+				 <!-- 	
+				</do_if>
+			</actions>
+		</cue> -->
+		<cue name="jbm_test_menu" instantiate="true" namespace="this">
+			<conditions>
+				<check_any>
+					<event_conversation_next_section 			section="jbm_test_menu"/>
+					<event_conversation_returned_to_section 	section="jbm_test_menu"/>
+					<event_conversation_started 				conversation="jbm_test_menu"/>
+					<event_cue_signalled/>
+				</check_any>
+			</conditions>
+			<actions>
+				<!-- <add_conversation_view/> -->
+				<add_player_choice_sub	text="{356001,2}" position="top_left"		section="" 			comment="modify" 		actor="player.computer"/>
+				<add_player_choice_return	text="{1002,20}" comment="(back)"/>
+			</actions>
+		</cue>
+		<cue name="jbm_test_modify" instantiate="true" namespace="this">
+			<conditions>
+				<check_any>
+					<event_conversation_next_section section="jbm_test_modify" />
+					<event_conversation_returned_to_section section="jbm_test_modify" />
+				</check_any>
+			</conditions>
+			<actions>
+				<debug_text text="Hey there - you just called the ship modification menu" chance="100" />
+			</actions>
+		</cue>
+  </cues>
+</mdscript>

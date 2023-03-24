@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mdscript name="jbm_test_modify" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="md.xsd">
+	<cues>
+		<cue name="jbm_test_modify_ship_Initialization" instantiate="true" namespace="this">
+			<conditions>
+				<event_cue_signalled/>
+			</conditions>
+			<actions>
+				<debug_text text="Hey there - you just called the ship modification menu" chance="100" />
+			</actions>
+		</cue>
+	</cues>
+</mdscript>

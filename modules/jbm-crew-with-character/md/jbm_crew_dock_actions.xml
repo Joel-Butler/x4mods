@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mdscript name="Jbm_crew_dock_actions" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="md.xsd">
+	<cues>
+        <cue name="Jbm_on_owned_mlxml_dock" instantiate="true" >
+			<!-- 
+				Logic:
+					1. Is the ship a player ship.
+					2. Is it of size M, L or XL
+					3. Does it have at least one crewmember outside of the captain (we'll assume for now the captain is going to be busy. 
+
+					      <xs:element name="event_object_docked">
+							<xs:annotation>
+							<xs:documentation>
+								Event for the specified object docking (object = docking object, param = dock object, param2 = zone)
+							</xs:documentation>
+							</xs:annotation>
+							<xs:complexType>
+							<xs:attributeGroup ref="eventcondition" />
+							<xs:attributeGroup ref="objecteventsource" />
+							<xs:attribute name="dock" type="container" />
+							<xs:attribute name="zone" type="zone" />
+							</xs:complexType>
+						</xs:element>
+			-->
+			<conditions>
+				<check_all>
+					<event_object_docked group="global.$PlayerShipsGroup"/>
+					<check_value value="event.object.trueowner" exact="faction.player" />
+				</check_all>
+				<check_any>
+					<check_value value="event.object.isclass.ship_l" exact="faction.player" />
+					<check_value value="event.object.isclass.ship_m" exact="faction.player" />
+					<check_value value="event.object.isclass.ship_xl" exact="faction.player" />
+				</check_any>
+			</conditions>
+			<actions>
+				<debug_to_file name="jbmcrew" text="'Docking Event for ship: ' + event.object.name + ' size: ' event.object.class + 'actors: '+ event.object.actors" />
+				<debug_text text="'Docking Event for ship: ' + event.object.name + ' size: ' event.object.class + 'actors: '+ event.object.actors" />
+			</actions>
+		</cue>
+  </cues>
+</mdscript>

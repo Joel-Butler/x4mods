@@ -2,9 +2,10 @@
 
 ## Overview
 This is both my platform and my archive of X4 Mods.
+A more detailed overview of the mods and documentation is available at:
 
-## Mods
-1. [Jbm-test](https://joel-butler.github.io/x4mods/Mod-Jbm-test.md) - a playground for module tweaking and testing. 
+https://joel-butler.github.io/x4mods/
+
 
 ## Tools and Scripts
 1. generatecats.bat - a batch file able to generate from a working install of X4 (and the presence of the X4 Catalog tool) the extracted resources required for modding.

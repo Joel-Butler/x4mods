@@ -28,14 +28,14 @@
 					<check_value value="event.object.trueowner" exact="faction.player" />
 				</check_all>
 				<check_any>
-					<check_value value="event.object.isclass.ship_l" exact="faction.player" />
-					<check_value value="event.object.isclass.ship_m" exact="faction.player" />
-					<check_value value="event.object.isclass.ship_xl" exact="faction.player" />
+					<check_value value="event.object.isclass.ship_l" />
+					<check_value value="event.object.isclass.ship_m" />
+					<check_value value="event.object.isclass.ship_xl" />
 				</check_any>
 			</conditions>
 			<actions>
-				<debug_to_file name="jbmcrew" text="'Docking Event for ship: ' + event.object.name + ' size: ' event.object.class + 'actors: '+ event.object.actors" />
-				<debug_text text="'Docking Event for ship: ' + event.object.name + ' size: ' event.object.class + 'actors: '+ event.object.actors" />
+				<debug_to_file name="'jbmcrew.txt'" text="'Docking Event for ship: ' + event.object.name + ' size: ' + event.object.class + 'actors: '+ event.object.actors" />
+				<debug_text text="'Docking Event for ship: ' + event.object.name + ' size: ' + event.object.class + 'actors: '+ event.object.actors" />
 			</actions>
 		</cue>
   </cues>

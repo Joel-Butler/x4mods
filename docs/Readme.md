@@ -3,6 +3,9 @@
 ## Overview
 This is both my platform and my archive of X4 Mods.
 
+## [Repo](https://github.com/Joel-Butler/x4mods/)
+https://github.com/Joel-Butler/x4mods/
+
 ## Mods
 1. [Jbm-test](Mod-Jbm-test.md) - a playground for module tweaking and testing. 
 

@@ -18,9 +18,9 @@ GOTO :end
 
 :main
 SETLOCAL
-set bdest="%2\%1"
+set bdest="%~2\%~1"
 IF [%2]==[] ( set bdest=".\build\%1" )
 echo building mod %1 output to %bdest%
-robocopy .\modules\%1 "%bdest%" /xf *.xsd /s /MIR
+robocopy .\modules\%1 %bdest% /xf *.xsd /s /MIR
 
 :end

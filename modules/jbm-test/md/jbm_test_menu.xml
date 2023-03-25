@@ -10,7 +10,7 @@
 				<check_value value="event.object.trueowner" exact="faction.player" />
 			</conditions>
 			<actions>
-				<add_player_choice_sub text="{356001,1}" position="top_right" section="jbm_test_menu" comment="Entrance"/>
+				<add_player_choice_sub text="{356001,1}" position="top_right" section="Jbm_test_menu" comment="Entrance"/>
 				<add_player_choice_return	text="{1002,20}" comment="(back)"/>
 			</actions>
 		</cue>
@@ -39,7 +39,7 @@
 			</conditions>
 			<actions>
 				<!-- <add_conversation_view/> -->
-				<add_player_choice_sub	text="{356001,2}" position="top_left"		section="" 			comment="modify" 		actor="player.computer"/>
+				<add_player_choice_sub	text="{356001,2}" position="top_left"		section="Jbm_test_modify" 			comment="modify" 	/>
 				<add_player_choice_return	text="{1002,20}" comment="(back)"/>
 			</actions>
 		</cue>
@@ -51,7 +51,9 @@
 				</check_any>
 			</conditions>
 			<actions>
-				<debug_text text="'Hey there - you just called the ship modification menu'" chance="100" />
+				<debug_text text="'Hey there - you just called the ship modification menu'" chance="100" filter="general" />
+				<add_player_choice_sub text="{356001,1}" position="top_left" section="muckingabout" comment="muckingabout" />
+				<add_player_choice_return	text="{1002,20}" comment="(back)"/>
 			</actions>
 		</cue>
   </cues>

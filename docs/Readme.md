@@ -4,7 +4,7 @@
 This is both my platform and my archive of X4 Mods.
 
 ## Mods
-1. [Jbm-test]() - a playground for module tweaking and testing. 
+1. [Jbm-test](Mod-Jbm-test.md) - a playground for module tweaking and testing. 
 
 ## Tools and Scripts
 1. generatecats.bat - a batch file able to generate from a working install of X4 (and the presence of the X4 Catalog tool) the extracted resources required for modding.

@@ -34,10 +34,21 @@
 				</check_any>
 			</conditions>
 			<actions>
-				<debug_to_file name="'jbmcrew.txt'" text="'Docking Event for ship: ' + event.object.name + ' size: ' + event.object.class + ' workforce: ' + event.object.workforce.amount" />
-				<do_for_each name="$actor" in="event.object.actors">
-					<debug_to_file name="'jbmcrew.txt'" text="'Docking Event for ship: ' + event.object.name + ' actor: ' + $actor.name + ' class: ' + $actor.class" />
-				</do_for_each>	
+				<!-- So the important thing here is that to query a crew member, you must reference it via the parent object... in this case our ship. 							
+				-->
+				<set_value name="$sourceShip" exact="event.object" />
+				<set_value name="$disorderlyCrewTemplate" exact="$sourceShip.people.{entityrole.service}.list.random" />
+				<set_value name="$disorderlyCrewGender" exact="if $sourceShip.people.{$disorderlyCrewTemplate}.isfemale then 'female' else 'male'" />>
+				<debug_to_file name="'jbmcrew.txt'" text="'Docking Event for ship: ' + $sourceShip.name + ' size: ' + $sourceShip.class + ' Engineer workforce: ' + $sourceShip.people.{entityrole.service}.list.count" />
+				<debug_to_file name="'jbmcrew.txt'" text="'Selected ' + $sourceShip.people.{$disorderlyCrewTemplate}.name + ' ' +  $sourceShip.people.{$disorderlyCrewTemplate}.race + ' ' +  $disorderlyCrewGender + ', engineer of ' + $sourceShip.name + ' for fun and profit :-)'" />	
+				<remove_npc_template object="$sourceShip" template="$disorderyCrewTemplate" />
+				<create_npc_from_template object="" template="$disorderyCrewTemplate" owner="faction.alliance" setroomslot="true" required="true" placementobject=""></create_npc_from_template>
+				<!-- Todo: 
+					1. Transfer the crew member to the Docked station
+					2. Transfer the ownership of the crew member (temporarily) to the related faction and store them permanently.
+					3. Raise a mission cue to go get them, or not as your avatar sees fit.
+				-->
+				
 			</actions>
 		</cue>
   </cues>

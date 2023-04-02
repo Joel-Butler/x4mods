@@ -1,102 +1,141 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mdscript name="Jbm_crew_dock_actions" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="md.xsd">
+<mdscript name="Jbm_DockingActions" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="md.xsd">
 	<cues>
-        <cue name="Jbm_on_owned_mlxml_dock" instantiate="true" >
-			<!-- 
-				Logic:
-					1. Is the ship a player ship.
-					2. Is it of size M, L or XL
-					3. Does it have at least one crewmember outside of the captain (we'll assume for now the captain is going to be busy. 
-					4. Do we have an active crew member up to mischief from this ship.
-					5. TODO: Add global timeout - lets not make these too frequent.
-			-->
+		<!-- this cue creates shared variables for use across instances 
+		-->
+		<cue name="Vars">
 			<conditions>
-				<check_all>
-					<event_object_docked group="global.$PlayerShipsGroup"/>
-					<check_value value="event.object.trueowner" exact="faction.player" />
-					<check_value value="$event.object.people.{entityrole.service}.count gt 0" />
-				</check_all>
-				<check_any>
-					<check_value value="event.object.isclass.ship_l" />
-					<check_value value="event.object.isclass.ship_m" />
-					<check_value value="event.object.isclass.ship_xl" />
-				</check_any>
+				<event_universe_generated />
 			</conditions>
-			<!-- So the important thing here is that to query a crew member, you must reference it via the parent object... in this case our ship. -->
 			<actions>
-				<set_value name="$sourceShip" exact="event.object" />
-				<set_value name="$station" exact="event.object.dock.container" />
-				<set_value name="$disorderlyCrewTemplate" exact="$sourceShip.people.{entityrole.service}.list.random" />
-				<set_value name="$disorderlyCrewGender" exact="if $sourceShip.people.{$disorderlyCrewTemplate}.isfemale then 'female' else 'male'" />
-				<debug_to_file name="'jbmcrew.txt'" text="'Docking Event for ship: ' + $sourceShip.name + ' size: ' + $sourceShip.class + ' Engineer workforce: ' + $sourceShip.people.{entityrole.service}.list.count" />
-				<debug_to_file name="'jbmcrew.txt'" text="'Selected ' + $sourceShip.people.{$disorderlyCrewTemplate}.name + ' ' +  $sourceShip.people.{$disorderlyCrewTemplate}.race + ' ' +  $disorderlyCrewGender + ', engineer of ' + $sourceShip.name + ' for fun and profit :-)'" />	
-				
-				<find_room name="$prisonRoom" object="$station" roomtype="roomtype.prison" />
-				
-				<do_if value="$prisonRoom.isclass.room">
-					<!-- Not clear what we'll do here yet apart from confirming we're good -->
+				<debug_to_file name="'jbmcrew.txt'" text="'Universe generated... initalizing.'" />	
+				<do_if value="not $npcs?">
+					<!-- table[
+						$cueInstance = table[
+						$npcTemplate = <template npc>, 
+						$npc = <instantiated NPC>, 
+						$originShip = <ship NPC was from> 
+					]
+					] -->
+					<set_value name="$npcs" exact='table[]' />
+					<!-- table[
+						$cueInstance = table[
+							$npcTemplate = <template npc>, 
+							$station = <station on which event is ocurring>, 
+							$originShip = <ship NPC was from>, 
+							$interior = <interior event is occuring in>, 
+							$interiorTemporary = <bool - true if we created this interior> 
+						]
+					] -->
+					<debug_to_file name="'jbmcrew.txt'" text="'Created empty table $npcs: ' + $npcs" />	
 				</do_if>
-				<do_else>
-					<set_value name="$CrewDetainPrisonMacro" exact="macro.room_gen_detentioncell_01_macro"/>
-					<get_room_definition doors="$CrewDetainPrison_PrisonInteriorDoors" macro="$CrewDetainPrison_CorridorMacro" race="$station.owner.primaryrace" tags="tag.corridor" />
-					<set_value name="$CrewDetainPrison_Door" exact="if $CrewDetainPrison_PrisonInteriorDoors.count ge 3 then $CrewDetainPrison_PrisonInteriorDoors.{3} else $CrewDetainPrison_PrisonInteriorDoors.{1}"/>
-					<create_dynamic_interior object="$station" name="'CrewBrig'" 
-						corridor="$CrewDetainPrison_CorridorMacro" 
-						door="$CrewDetainPrison_Door" 
-						room="macro.room_gen_detentioncell_01_macro" 
-						roomname="$prisonRoom" 
-						corridorname="$Corridor" 
-						interiorname="$Interior" 
-						persistent="true" roomtype="roomtype.prison"/>
-				</do_else>
-				<create_npc_from_template name="$crewNPC" object="$sourceShip" template="$disorderyCrewTemplate" owner="$station.faction" />
-				<remove_npc_template object="$sourceShip" template="$disorderyCrewTemplate" />
-
-				<find_npc_slot name="$NPCSlot" object="$prisonRoom" tags="tag.prisoner" multiple="false" excludefilled="true" />
-				
-				<signal_cue_instantly cue="md.NPC_Instantiation.NPC_Placement_Manager" param="['add_definition', $crewNPC, 
-				table[
-				$requestercue = $PlacementTable.$cue,
-				$priority = $PlacementTable.$priority,
-				$location = $prisonRoom,
-				$slottags = [tag.prisoner],
-				$debugchance = 100,
-				$debugcaller = if $DebugChance == 100 then this else null]
-				]"/>
-				
-				
-				
-				<!-- Todo: 
-					1. Remove the crew member and store as a temporary object.
-					2. Com the player with a call for help.
-						a. Is the player nearby?
-							aa. Yes - then instantiate a Brig room on this station, and assign our NPC as an actor to this room
-							ab. No - then just run the call from a generic location for now. 
-						Outcomes:
-							1. Mission accept - create mission to visit brig and Staff actor to discuss paying fines.
-								a. Mission
-									aa. Converse with Station security/marine. Pay fines for staff release.
-									ab. Outcome - significant increase in morale for single staff member. 
-										aaa. Todo - Consider storing 'character' crew in table for more frequent use and recurring behavior. 
-							2. Mission decline - remove staff member, log randomized morale increase/decrease for staff (could have been a liked or disliked crew member).
-
-a					<create_npc_from_template object="" template="$disorderyCrewTemplate" owner="faction.alliance" setroomslot="true" required="true" placementobject=""></create_npc_from_template>
-					2. Transfer the ownership of the crew member (temporarily) to the related faction and store them permanently.
-					3. Raise a mission cue to go get them, or not as your avatar sees fit.
-				-->
-				
+				<do_if value="not $activeEvents?">
+					<set_value name="$activeEvents" exact='table[]' />
+					<debug_to_file name="'jbmcrew.txt'" text="'Created empty table $activeEvents :' + $activeEvents" />	
+				</do_if>
+				<debug_to_file name="'jbmcrew.txt'" text="'counts: $npcs: ' +md.Jbm_DockingActions.Vars.$npcs.keys.list.count + '$activeEvents: ' + md.Jbm_DockingActions.Vars.$activeEvents.keys.list.count  " />	
 			</actions>
+			<cues>
+				<cue name="On_Owned_Ship_dock" instantiate="true" >
+					<!-- 
+						Logic:
+							1. Is the ship a player ship.
+							2. Is it of size M, L or XL
+							3. Does it have at least one crewmember outside of the captain (we'll assume for now the captain is going to be busy. 
+							4. Do we have an active crew member up to mischief from this ship.
+							5. There shouldn't be more than 3 of these active at a time. 
+							6. TODO: Add global timeout - lets not make these too frequent.
+					-->
+					<conditions>
+						<check_all>
+							<event_object_docked group="global.$PlayerShipsGroup"/>
+							<check_value value="event.object.trueowner" exact="faction.player" />
+							<check_value value="event.object.people.{entityrole.service}.count gt 0" />
+							<check_value value="md.Jbm_DockingActions.Vars.$activeEvents.keys.list.count le 3" />
+						</check_all>
+						<check_any>
+							<check_value value="event.object.isclass.ship_l" />
+							<check_value value="event.object.isclass.ship_m" />
+							<check_value value="event.object.isclass.ship_xl" />
+						</check_any>
+						<set_value name="$sourceShip" exact="event.object" />
+					</conditions>
+					<!-- So the important thing here is that to query a crew member, you must reference it via the parent object... in this case our ship. -->
+					<actions>
+						<set_value name="$cue" exact="this.name + '_' + Vars.$activeEvents.keys.list.count + 1 " />
+						<set_value name="$station" exact="$sourceShip.dock.container" />
+						<set_value name="$disorderlyCrewTemplate" exact="$sourceShip.people.{entityrole.service}.list.random" />
+						<set_value name="$disorderlyCrewGender" exact="if $sourceShip.people.{$disorderlyCrewTemplate}.isfemale then 'female' else 'male'" />
+						<debug_to_file name="'jbmcrew.txt'" text="'Docking Event for ship: ' + $sourceShip.name + ' size: ' + $sourceShip.class + ' Engineer workforce: ' + $sourceShip.people.{entityrole.service}.list.count" />
+						<debug_to_file name="'jbmcrew.txt'" text="'Selected ' + $sourceShip.people.{$disorderlyCrewTemplate}.name + ' ' +  $sourceShip.people.{$disorderlyCrewTemplate}.race + ' ' +  $disorderlyCrewGender + ', engineer of ' + $sourceShip.name + ' for fun and profit :-)'" />	
+						<set_value name="$activeEvents.$cue" exact="table[
+							$npcTemplate = $disorderlyCrewTemplate, 
+							$station = $station, 
+							$originShip = $sourceShip, 
+							$interior = null, 
+							$interiorTemporary = false 
+							]"/>
+						<find_room name="$prisonRoom" object="$station" roomtype="roomtype.prison" />
+						
+						<do_if value="$prisonRoom.isclass.room">
+							<!-- Not clear what we'll do here yet apart from confirming we're good -->
+						</do_if>
+						<do_else>
+							<set_value name="$CrewDetainPrisonMacro" exact="macro.room_gen_detentioncell_01_macro"/>
+							<get_room_definition doors="$CrewDetainPrison_PrisonInteriorDoors" macro="$CrewDetainPrison_CorridorMacro" race="$station.owner.primaryrace" tags="tag.corridor" />
+							<set_value name="$CrewDetainPrison_Door" exact="if $CrewDetainPrison_PrisonInteriorDoors.count ge 3 then $CrewDetainPrison_PrisonInteriorDoors.{3} else $CrewDetainPrison_PrisonInteriorDoors.{1}"/>
+							<create_dynamic_interior object="$station" name="'CrewBrig'" 
+								corridor="$CrewDetainPrison_CorridorMacro" 
+								door="$CrewDetainPrison_Door" 
+								room="macro.room_gen_detentioncell_01_macro" 
+								roomname="$prisonRoom" 
+								corridorname="$Corridor" 
+								interiorname="$Interior" 
+								persistent="true" roomtype="roomtype.prison"/>
+							<set_value name="Vars.$activeEvents.$cue.$interior" exact="$Interior" />
+						</do_else>
+						<set_value name="Vars.$activeEvents.$cue.$interiorTemporary" exact="false" />
+						<set_value name="Vars.$activeEvents.$cue.$interior" exact="$prisonRoom.dynamicinterior" />
+						<debug_to_file name="'jbmcrew.txt'" text="'Table: for ' + $cue + ' : ' + $activeEvents.$cue" />	
+						<create_npc_template object="$station" role="entityrole.prisoner" otherobject="$sourceShip" template="$disorderlyCrewTemplate" name="$disorderlyCrewStationTemplate" />
+						<find_npc_slot name="$NPCSlot" object="$prisonRoom" tags="tag.prisoner" multiple="false" excludefilled="true" />
+						<create_npc_from_template object="$station" name="$crewNPC" template="$disorderlyCrewStationTemplate" owner="faction.player" placementobject="$prisonRoom" setroomslot="true" slot="$NPCSlot"/>
+						<set_value name="Vars.$npcs.$cue" exact="table[
+							$npcTemplate = $disorderlyCrewStationTemplate, 
+							$npc = $crewNPC, 
+							$originShip = $originShip 
+							
+						]" />
+						<create_cue_actor cue="this" name="$Sheriff" >
+							<select faction="$station.owner" race="$station.owner.primaryrace" />
+							<owner exact="$station.owner" />
+						</create_cue_actor>	
+						
+						<start_conversation conversation="$SherrifCall" actor="$Sherrif" type="normal" />
+						<add_npc_line page="356002" line="1" />
+						
+						<!-- Todo: 
+							1. Remove the crew member and store as a temporary object.
+							2. Com the player with a call for help.
+								a. Is the player nearby?
+									aa. Yes - then instantiate a Brig room on this station, and assign our NPC as an actor to this room
+									ab. No - then just run the call from a generic location for now. 
+								Outcomes:
+									1. Mission accept - create mission to visit brig and Staff actor to discuss paying fines.
+										a. Mission
+											aa. Converse with Station security/marine. Pay fines for staff release.
+											ab. Outcome - significant increase in morale for single staff member. 
+												aaa. Todo - Consider storing 'character' crew in table for more frequent use and recurring behavior. 
+									2. Mission decline - remove staff member, log randomized morale increase/decrease for staff (could have been a liked or disliked crew member).
+		
+							<create_npc_from_template object="" template="$disorderyCrewTemplate" owner="faction.alliance" setroomslot="true" required="true" placementobject=""></create_npc_from_template>
+							2. Transfer the ownership of the crew member (temporarily) to the related faction and store them permanently.
+							3. Raise a mission cue to go get them, or not as your avatar sees fit.
+						-->
+						
+					</actions>
+				</cue>
+			</cues>
 		</cue>
-		<library name="Resources">
-			<actions>
-				<!-- crew we will reference and interact with later -->
-				<set_value name="$crewRegister" exact="table[]" />
-				
-				<!-- a list of stations that are holding crew... we want to limit this for sanity and performance purposes. -->
-				<set_value name="$brigRegister" exact="table[]" />
-				
-			</actions>
-
-		</library>
   </cues>
 </mdscript>

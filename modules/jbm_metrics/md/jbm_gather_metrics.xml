@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mdscript name="Jbm_gather_metrics" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="md.xsd">
+	<cues>
+	<cue name="JBMOnLuaLoaderReady">
+		<conditions>
+			<event_ui_triggered screen="'Lua_Loader'" control="'Ready'"/>
+		</conditions>
+		<actions>
+			<raise_lua_event name="'Lua_Loader.Load'" param="'extensions.jbm_metrics.ui.core'"/>
+		</actions>
+	</cue>
+	<cue name="JBMOnLuaLoaderReadyCompleted">
+		<conditions>
+			<event_cue_completed cue="JBMOnLuaLoaderReady"/>
+		</conditions>
+		<actions>
+			<reset_cue cue="JBMOnLuaLoaderReady"/>
+			<reset_cue cue="this"/>
+		</actions>
+	</cue>
+	<cue name="JBMRegister_Pipe_Server" instantiate="true">
+		<conditions>
+			<event_cue_signalled cue="md.Pipe_Server_Host.Reloaded"/>
+		</conditions>
+		<actions>
+			<signal_cue_instantly
+					cue="md.Pipe_Server_Host.Register_Module"
+					param="'extensions/jbm_metrics/pipe_external.txt'"/>
+		</actions>
+	</cue>
+	<cue name="JBMMain">
+		<conditions>
+			<check_any>
+				<event_cue_signalled cue="md.Setup.GameStart"/>
+				<event_game_loaded/>
+			</check_any>
+		</conditions>
+		<actions>
+			<set_value name="$debugchance" exact="0"/>
+		</actions>
+		<cues>
+			<cue name="JBMMetricsGetmetrics" instantiate="true" checkinterval="3s">
+				<actions>
+					<raise_lua_event name="'jbm_metrics.getMetrics'" />
+				</actions>
+			</cue>
+			<cue name="JBMMetricsWritemetrics" instantiate="true">
+				<conditions>
+					<event_ui_triggered screen="'eventlog_ui_trigger'" control="'jbm_metrics_ui'"/>
+				</conditions>
+				<actions>
+					<debug_text text="'JBM Metric: JBMMetricsWritemetrics '" chance="$debugchance"/>
+
+					<set_value name="$data" exact="event.param3"/>
+					<debug_text text="'JBM Metric: $data ' + $data" chance="$debugchance"/>
+
+					<signal_cue_instantly
+							cue="md.Named_Pipes.Write"
+							param="table[$pipe='jbm_metrics', $msg=$data]"/>
+				</actions>
+			</cue>
+		</cues>
+	</cue>
+
+	<cue name="Server_Reader_Wrapper">
+		<cues>
+			<cue name="Server_Reader" ref="md.Pipe_Server_Lib.Server_Reader">
+				<param name="Actions_On_Reload" value="Actions_On_Reload"/>
+				<param name="Actions_On_Connect" value="Actions_On_Connect"/>
+				<param name="Actions_On_Read" value="Actions_On_Read"/>
+			</cue>
+		</cues>
+	</cue>
+
+	<library name="Actions_On_Reload">
+		<actions>
+			<set_value name="$Pipe_Name" exact="'jbm_metrics'"/>
+			<set_value name="$DebugChance" exact="0"/>
+		</actions>
+	</library>
+
+	<library name="Actions_On_Connect">
+		<actions>
+			<signal_cue cue="$Start_Reading"/>
+		</actions>
+	</library>
+
+	<library name="Actions_On_Read">
+		<actions>
+			<debug_text text="'JBM Metric: received metric: %s.'.[event.param]"
+						chance="$debugchance" filter="general"/>
+		</actions>
+	</library>
+</cues>
+</mdscript>

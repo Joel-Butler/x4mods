@@ -1,0 +1,22 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../../Users/joel_jhbutler/Documents/Egosoft/X4/6800298/logs"
+		}
+	],
+	"settings": {
+		"logViewer.watch": [
+			{
+				"title": "Jbmcrew Debug ",
+				"pattern": "C:\\Users\\joel_jhbutler\\Documents\\Egosoft\\X4\\6800298\\logs\\jbmcrew.txt"
+				},
+				{
+				"title": "X4 Debug log",
+				"pattern": "C:\\Users\\joel_jhbutler\\Documents\\Egosoft\\X4\\6800298\\debuglog.txt"
+					},
+		]
+	}
+}

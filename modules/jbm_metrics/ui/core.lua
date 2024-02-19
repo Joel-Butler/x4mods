@@ -30,6 +30,7 @@ end
 function external.fetchData()
     local data = {}
     data.credits = GetPlayerMoney()
+    data.gameTime = C.GetCurrentGameTime()
     return data;
 end
 

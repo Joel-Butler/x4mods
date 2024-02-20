@@ -31,9 +31,45 @@ function external.fetchData()
     local data = {}
     data.credits = GetPlayerMoney()
     data.gameTime = C.GetCurrentGameTime()
+
+    --get number of stations owned
+    local numStations = C.GetNumAllFactionStations("player")
+    --create object for stations - array of UniverseIDs of size (numstations)
+    local allownedstations = ffi.new("UniverseID[?]", numStations)
+    --load array
+    numStations = C.GetAllFactionStations(allownedstations, numStations, "player")
+    
+    local numShips = C.GetNumAllFactionShips("player")
+	local allownedships = ffi.new("UniverseID[?]", numShips)
+	numShips = C.GetAllFactionShips(allownedships, numShips, "player")
+    
+    data.shipsXL =0
+    data.shipsL = 0
+    data.shipsM = 0
+    data.shipsS = 0
+
+    for i=0, numShips-1 do 
+        local locship = ConvertStringTo64Bit(tostring(allownedships[i]))
+        if (not C.IsUnit(locship)) and (C.IsComponentOperational(locship)) and (not GetMacroData(GetComponentData(locship, "macro"), "islasertower")) then
+            if C.IsComponentClass(locship, "ship_s") then
+              data.shipsS = data.shipsS + 1
+            elseif C.IsComponentClass(locship, "ship_m") then
+                data.shipsM = data.shipsM + 1
+            elseif C.IsComponentClass(locship, "ship_l") then
+                data.shipsL = data.shipsL + 1
+            elseif C.IsComponentClass(locship, "ship_xl") then
+                data.shipsXL = data.shipsXL + 1
+            end
+        end
+    end
+    for i=0, numStations-1 do 
+        --TODO: iterate through stations and extract data.
+    end
+
+    data.stations = numStations
+    data.ships = numShips
+
     return data;
 end
-
-
 
 init()

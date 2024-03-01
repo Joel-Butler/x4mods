@@ -24,6 +24,7 @@ def main(args):
     # Configure metrics
     playerCash = Gauge('X4_Player_Cash', 'Current Value of Player Cash')
     x4Time = Counter('X4_Game_Time', 'Current time in X4 Game')
+    X4Ships = Gauge('X4_Player_Ships', 'Player owned ships in X4', ["Size"])
 
     
     print('###: Attempting to connect to ' + pipeInName + '')
@@ -49,11 +50,13 @@ def main(args):
             gametimeInc = jsonData['gameTime'] - gameTime
             gameTime = jsonData['gameTime']
             x4Time.inc(gametimeInc)
-        except (win32api.error) as ex1:
+            X4Ships.labels(Size='S').set(jsonData['shipsS'])
+            X4Ships.labels(Size='M').set(jsonData['shipsM'])
+            X4Ships.labels(Size='L').set(jsonData['shipsL'])
+            X4Ships.labels(Size='XL').set(jsonData['shipsXL'])
+        except (win32api.error, Exception) as ex1:
             REGISTRY.unregister(x4Time)
             REGISTRY.unregister(playerCash)
+            REGISTRY.unregister(X4Ships)
             raise ex1
-        except Exception as ex:
-            REGISTRY.unregister(x4Time)
-            REGISTRY.unregister(playerCash)
-            raise ex
+

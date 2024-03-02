@@ -62,6 +62,11 @@ function external.fetchData()
             end
         end
     end
+
+    local transEndTime = C.GetCurrentGameTime()
+    -- metrics for last 6 hours
+    local starttime = math.max(0, endtime - 360)
+    ---local transData = 
     for i=0, numStations-1 do 
         --TODO: iterate through stations and extract data.
     end

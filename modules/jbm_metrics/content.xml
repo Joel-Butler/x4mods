@@ -3,7 +3,7 @@
     name="JBM_Metrics" 
     description="Piped metrics for empire monitoring." 
     author="JBM" 
-    version="001" 
+    version="1.0.0" 
     save="0" 
     date="2024-02-24">
     <dependency id="ws_2042901274" optional="false" name="SirNukes Mod Support APIs"/>

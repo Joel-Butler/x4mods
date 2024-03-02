@@ -38,7 +38,7 @@ if ($myResponse -eq "Y")  {
     
 
     Write-Output "Installing Prometheus..."
-    #Invoke-WebRequest $prometheusDownload -OutFile "$installPath\prometheus.zip"
+    Invoke-WebRequest $prometheusDownload -OutFile "$installPath\prometheus.zip"
     Expand-Archive -Path "$installPath\prometheus.zip" -DestinationPath $installPath
     Remove-Item "$installPath\prometheus.zip"
 
@@ -50,7 +50,7 @@ if ($myResponse -eq "Y")  {
 
     Write-Output "Installing Grafana..."
 
-    #Invoke-WebRequest $grafanaDownload -OutFile "$installPath\grafana.zip"
+    Invoke-WebRequest $grafanaDownload -OutFile "$installPath\grafana.zip"
     Expand-Archive -Path "$installPath\grafana.zip" -DestinationPath $installPath
     Remove-Item "$installPath\grafana.zip"
     

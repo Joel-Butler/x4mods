@@ -12,7 +12,10 @@ This module leverages [SirNukes Mod Support APIs](https://github.com/bvbohnen/x4
 
 ## Requirements
 1. Windows - to my knowledge the named pipes API does not work with Linux. 
-2. Available ports:
+2. Python - the executable version of the named pipes server doesn't have the prometheus client installed.
+3. SirNukes API server in python format (I've made a script to help download this.)
+3. Pip install of [prometheus client](https://pypi.org/project/prometheus-client/). 
+4. Available ports:
     1. metrics: 8000
     2. (optional) prometheus: 9090
     3. (optional) grafana: 3000

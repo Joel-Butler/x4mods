@@ -39,7 +39,7 @@
 			<set_value name="$debugchance" exact="0"/>
 		</actions>
 		<cues>
-			<cue name="JBMMetricsGetmetrics" instantiate="true" checkinterval="3s">
+			<cue name="JBMMetricsGetmetrics" instantiate="true" checkinterval="5s">
 				<actions>
 					<raise_lua_event name="'jbm_metrics.getMetrics'" />
 				</actions>

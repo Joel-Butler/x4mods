@@ -5,28 +5,35 @@
 ## Overview
 This mod is my attempt to build out useful business metrics I'd want to help oversee my growing X4 empire. 
 
-## Requirements
-* Python (need to be able to install required additional python modules)
-* Pip install of [prometheus client](https://pypi.org/project/prometheus-client/)
+## Credits and other sources
+* [SirNukes](https://github.com/bvbohnen) - the Mod Support API interface is how the metric data is exposed.
+* [Mycu](https://github.com/mycumycu) - the mod side of the [X4 External App](https://github.com/mycumycu/X4-External-App) helped me puzzle out wrapping data written to the pipe in JSON format, and lead me to using 
+* [David Kolf's JSON module](http://dkolf.de/src/dkjson-lua.fsl) for encapsulation of Lua data sent to the python pipes server.
+
+## Requirements and Installation
+* There are several ways to set this up:
+    1. I have no interest in the plumbing, I just want this up and running with minimal effort:
+        * Install the mod. 
+        * Run the modified SirNukes executable attached in releases - this simply adds prometheus-client as a library available to the executable. 
+        * Run the install scripts that provision grafana and prometheus.
+    2. I'd like to roll my own:
+        * Python (need to be able to install required additional python modules).
+        * I have a script that can help with the below, but you're also welcome to install these by hand or re-use existing copies: 
+            * Pip install of [prometheus client](https://pypi.org/project/prometheus-client/), as well as the prerequisites for SirNukes Mod Support API python script of pywin32 and pynput.
+            * The source (Python) script of [X4_Python_Pipe_Server](https://github.com/bvbohnen/x4-projects/tree/master/X4_Python_Pipe_Server)
+        * Working installations of grafana and prometheus either leveraging the script proveded or by providing your own. 
 
 ## Current State:
 * Using [SirNukes Mod Support APIs](https://github.com/bvbohnen/x4-projects/tree/master/extensions/sn_mod_support_apis) (specifically the Named Pipes API) this mod hosts a prometheus-friendly metrics server. 
 
 ### Proposed Dev Stages
 #### In progress
-1. Can we get debug output listing available crew on a docked ship?
-    * Debug output so far includes actors, see note 2. for next steps below.
+* Nothing right now - focused on deploying a working mod :-)
 
 #### Todo
-2. Can we then randomly assign an interactive mission requring a trip to the local Brig for release of this crew?
-  * Randomize cost
-  * Minor reward of +1 morale to ship.
-  * If ignored, zero effect for now apart from a loss of said crew member. 
+1. Menu toggle to enable/disable metric feed - sometimes we want a few extra CPU cycles and the metrics can wait. 
+2. Granular transactional metrics per station to display individual station profit/loss over time. 
+3. Alert callbacks from prometheus to X4 to pause game on critical business events (loss of rep, loss of capital ships and so on...). 
 
-
-
-### Notes
-1. Struggling with which area crew is stored. So far it appears this may be stored as a ware based on the information held in menu_playerinfo.lua which seems to iterate over ship wares to identify crew.
-2. Crew *can* be actors, but only crew within the player's active room appear to be active - which makes sense from an efficiency standpoint.
 
 

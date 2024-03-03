@@ -12,7 +12,6 @@ function getDir($message) {
     }
 }
 
-
 $myResponse = Read-Host -Prompt "To Continue press Y"
 if ($myResponse -eq "Y")  {
     $changePath = Read-Host -Prompt "Would you like to use the default path of $defaultPath ?"
@@ -54,6 +53,17 @@ python "$installPath\X4_Python_Pipe_Server\main.py"
     }
 '@
     Set-Content -Path "$installPath\X4_Python_Pipe_Server\permissions.json" -Value $jsonContent
+    $matchContent = @'
+            '        r"win32file",',
+'@
+    $patchContent = @'
+            '        r"win32file",',
+            '        r"prometheus-client",',
+'@
+    $patchedContent = Get-Content -Path "$installPath\X4_Python_Pipe_Server\Make_Executable.py" -Raw
+    $patchedContent.Replace($matchContent, $patchContent)
+    Set-Content -Path "$installPath\X4_Python_Pipe_Server\Make_Executable.py" -Value $patchedContent
+
 }
 
 

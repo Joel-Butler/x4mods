@@ -1,3 +1,5 @@
+
+
 $x4Dir = 'C:\Program Files (x86)\Steam\steamapps\common\X4 Foundations'
 
 $X4Executable = (Get-ChildItem -path "$x4Dir\X4_nonsteam.exe").Fullname

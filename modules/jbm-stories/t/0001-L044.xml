@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <language id="44">
-    <page id="356003"  voice="no">
-		<t id="1">JBM Test Menu</t>
-		<t id="2">modify ship</t>
+    <page id="356003" title="JBM Stories Page 1" descr="0" voice="no">
+		<t id="1">(Mission Title)Mistaken Heretic</t>
+		<t id="2">(Mission Description)A Paranid Scientist has been accused of heresy and needs a ride to safety.</t>
+		<t id="3">(Mission Objective)Pick up the Scientist and escort to a safe location.</t>
+		<t id="4">(Heretic Scientist)Natkalcasor</t>
+		<t id="10000">(Emails)</t>
+		<t id="10001">(Email Title)Urgently need transport</t>
+		<t id="10002">(Email text)Urgent broadcast to all nearby ship captains.\nI need immediate transport and will pay a premium for your time and service.</t>
 	</page>
 </language>

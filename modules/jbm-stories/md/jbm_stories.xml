@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mdscript name="Jbm_Stories" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:noNamespaceSchemaLocation="md.xsd">
+  <cues>
+    <!-- this cue creates shared variables for use across instances 
+		-->
+    <cue name="Vars">
+      <conditions>
+        <event_universe_generated />
+      </conditions>
+      <actions>
+        <debug_to_file name="'jbmStories.txt'" text="'Universe generated... initalizing.'" />
+        <do_if value="not $jbmStories?">
+          <set_value name="$jbmStories" exact="table[
+            '$Request_For_Help' = table[
+              $activate_cue='',
+              $player_min_age=0,
+              $player_min_value=0,
+              $player_min_stations=0
+              ],
+          ]" />
+          <debug_to_file name="'jbmStories.txt'"
+            text="'Created empty table $jbmStories: ' + $jbmStories" />
+        </do_if>
+        <do_if value="not $jbmActiveStory?">
+          <!-- Tracks if a story is active (one at a time kids). -->
+          <set_value name="$jbmActiveStory" exact="table[]" />
+        </do_if>
+      </actions>
+      <cues>
+      </cues>
+    </cue>
+    <!-- Believe we should do something similar to:
+    cats/extensions/ego_dlc_boron/md/story_boron.xml#L3658 (note - requires extraction of files for
+    review).
+		-->
+    <cue name="Stories">
+      <!-- Wrapper cue for story objects. Can contain setup/actions-->
+      <conditions>
+        <event_universe_generated />
+        <check_value value="player.galaxy.macro.ismacro.{macro.xu_ep2_universe_macro}"
+          comment="only in main-galaxy" />
+      </conditions>
+      <cues>
+        <!-- from our table of stories, with a 5min delay from last major event,  if we're not in one, pick one and offer on a 20m schedule.-->
+        <cue name="Story_Scheduler" checkinterval="30s">
+        <conditions>
+          <check_value value="$jbmActiveStory.count" exact="0"/>
+          <check_value value="player.age ge (md.$LastMentorSpeak + 5min)"/>
+        </conditions>
+        <actions>
+          <set_value name="$jbmActiveStory" exact="table[$active] = jbmStories.random" />
+        </actions>
+        </cue>
+
+        <cue name="Story_Eval">
+          <conditions>
+            <event_cue_signalled />
+            <check_value value="$jbmActiveStory.count" exact="1" />
+          </conditions>
+          <actions>
+            <do_if value="$jbmActiveStory[$active].player_min_age lt player.age 
+              and $jbmActiveStory[$player_min_value] lt player.money">
+              <!-- We have a winner - trigger the mission -->
+              <signal_cue cue="$jbmActiveStory[$active].activate_cue" />
+            </do_if>
+              <do_if value="$jbmActiveStory[$active].player_min_age gt player.age 
+              or $jbmActiveStory[$player_min_value] lt player.money">
+              <!-- Requirements didn't match, back off for 30 seconds and pull one at random again. -->
+                <set_value name="$jbmActiveStory" exact="table[]" />
+              </do_if>
+            
+          </actions>
+        </cue>
+
+        <cue name="Activate_Request_For_Help">
+          <conditions>
+          <cue_is_waiting cue="Ch0_Request_For_Help" />
+          </conditions>
+          <actions>
+            <signal_cue cue="Ch0_Request_For_Help" />
+          </actions>
+        </cue>
+        <cue name="Ch0_Request_For_Help">
+          <conditions>
+            <event_cue_signalled />
+          </conditions>
+          <actions>
+            <!-- Create a mission offer... possibly play an audio byte. Send a message as well? -->
+            <write_incoming_message source="{356003,4}" title="{356003,10001}" text="{356003,10002}"></write_incoming_message>
+          </actions>
+          <cues>
+          </cues>
+          <!-- -->
+        </cue>
+      </cues>
+    </cue>
+  </cues>
+</mdscript>

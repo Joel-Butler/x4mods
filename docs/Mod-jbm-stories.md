@@ -9,6 +9,8 @@ This mod is intended to provide some additional small stories to add to the X4 e
 2. Teladi profitsss! A young teladi entrepeneur has an idea for a new market and she's looking for a ship to escort her as she identifies sources of materials. 
 
 
+## Status
+* Attempting to build conditions to trigger stories. Need to review the process for random selection used for normal missions and adapt (my approach isn't quite working yet).
 
 ## Planned areas of improvement
 1. *(Still need to get the actual scope done, improvements later)*

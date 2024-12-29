@@ -9,28 +9,7 @@ Import-Module .\script-module.psm1
 loadEnv
 
 if($Validate) {
-    $valid = $true
-    if( $null -eq $env:X4HOME ) {
-        Write-Host "Missing variable X4HOME"
-        $valid=$false
-    }
-    if( $null -eq $env:X4TOOLSHOME ) {
-        Write-Host "Missing variable X4TOOLSHOME"
-        $valid=$false
-    }
-    if( $null -eq $env:X4CATSFOLDER ) {
-        Write-Host "Missing variable X4CATSFOLDER"
-        $valid=$false
-    }
-    if($valid) {
-        Write-Host -ForegroundColor Green "[Tested OK]"
-        Write-Host -NoNewLine "Variables:`n`t X4HOME : "
-        Write-Host -ForegroundColor Green $env:X4HOME 
-        Write-Host -NoNewLine "`t X4TOOLSHOME : "
-        Write-Host -ForegroundColor Green $env:X4TOOLSHOME
-        Write-Host -NoNewLine "`t X4CATSFOLDER : "
-        Write-Host -ForegroundColor Green $env:X4CATSFOLDER
-    }
+    validateEnv
 }
 
 # Create cats dir if it doesn't exist

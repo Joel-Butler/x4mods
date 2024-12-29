@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mdscript name="Jbm_Stories" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="md.xsd">
+	<cues>
+		<!-- this cue creates shared variables for use across instances 
+		-->
+		<cue name="Vars">
+			<conditions>
+				<event_universe_generated />
+			</conditions>
+			<actions>
+				<debug_to_file name="'jbmStories.txt'" text="'Universe generated... initalizing.'" />	
+				<do_if value="not $jbmStories?">
+					<!-- table[
+						$cueInstance = table[
+						$npcTemplate = <template npc>, 
+						$npc = <instantiated NPC>, 
+						$originShip = <ship NPC was from> 
+					]
+					] -->
+					<set_value name="$jbmStories" exact='table[]' />
+					<!-- table[
+						$cueInstance = table[
+							$npcTemplate = <template npc>, 
+							$station = <station on which event is ocurring>, 
+							$originShip = <ship NPC was from>, 
+							$interior = <interior event is occuring in>, 
+							$interiorTemporary = <bool - true if we created this interior> 
+						]
+					] -->
+					<debug_to_file name="'jbmStories.txt'" text="'Created empty table $jbmStories: ' + $jbmStories" />	
+				</do_if>
+
+			</actions>
+			<cues>
+			</cues>
+		</cue>
+  </cues>
+</mdscript>

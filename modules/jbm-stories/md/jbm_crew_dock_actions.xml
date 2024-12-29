@@ -34,5 +34,7 @@
 			<cues>
 			</cues>
 		</cue>
+		<!-- Believe we should do something similar to: cats/extensions/ego_dlc_boron/md/story_boron.xml#L3658 (note - requires extraction of files for review).
+		-->
   </cues>
 </mdscript>

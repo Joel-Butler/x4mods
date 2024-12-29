@@ -11,8 +11,9 @@ https://github.com/Joel-Butler/x4mods/
 |Mod                        |Description                                         |Status         |
 |-----                      |-----                                               |-----          |
 |[Metrics](Mod-jbm-metrics.md)|A feed of prometheus style time series metrics that can be used to monitor your space empire.|Alpha|
-|[Jbm-test](Mod-Jbm-test.md)| A playground for module tweaking and testing.      |In Development |
-|[Crew with Character](Mod-jbm-crew-with-character.md)|Some adjustments to crew behavior I think will add some fun and rewards to being more attached to your ship crew. | In Development |
+|[Jbm-test](Mod-Jbm-test.md)| A playground for module tweaking and testing.      | On Hold |
+|[Crew with Character](Mod-jbm-crew-with-character.md)|Some adjustments to crew behavior I think will add some fun and rewards to being more attached to your ship crew. |  On Hold |
+|[Stories](Mod-jbm-stories.md)|Some simple stories using standard X4 mechanics (or at least as standard as I can learn from inspecting the cat files.) | Active Development |.
 
 ## Tools and Scripts
 1. generatecats.bat - a batch file able to generate from a working install of X4 (and the presence of the X4 Catalog tool) the extracted resources required for modding.

@@ -7,7 +7,7 @@ This mod is my attempt to build out useful business metrics I'd want to help ove
 
 ## Credits and other sources
 * [SirNukes](https://github.com/bvbohnen) - the Mod Support API interface is how the metric data is exposed.
-* [Mycu](https://github.com/mycumycu) - the mod side of the [X4 External App](https://github.com/mycumycu/X4-External-App) helped me puzzle out wrapping data written to the pipe in JSON format, and lead me to using 
+* [Mycu](https://github.com/mycumycu) - Inspecting the the mod side of the [X4 External App](https://github.com/mycumycu/X4-External-App) helped me puzzle out wrapping data written to the pipe in JSON format, and lead me to using 
 * [David Kolf's JSON module](http://dkolf.de/src/dkjson-lua.fsl) for encapsulation of Lua data sent to the python pipes server.
 
 ## Requirements and Installation

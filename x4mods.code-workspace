@@ -17,6 +17,7 @@
 				"title": "X4 Debug log",
 				"pattern": "C:\\Users\\joel_jhbutler\\Documents\\Egosoft\\X4\\6800298\\debuglog.txt"
 					},
-		]
+		],
+		"powershell.cwd": "x4mods"
 	}
 }

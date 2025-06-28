@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mdscript name="Jbm_CaptainShuffle" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="md.xsd">
+	<cues>
+    <cue name="Init">
+        <conditions>
+            <check_any>
+                <event_universe_generated />
+                <event_game_loaded />
+                <event_cue_signalled cue="md.Setup.Start" />
+            </check_any>
+        </conditions>
+        <actions>
+          <set_value name="$JBMCaptainDebug" exact="0" />
+          <set_value name="$JBMlua_response" exact="''"/>
+          <debug_text text="'Init Match!'" chance="$JBMCaptainDebug" />
+        </actions>
+        <cues>
+          <cue name="FleetCaptainChat" instantiate="true">
+            <conditions>
+              <check_any>
+                <event_conversation_started conversation="default" />
+              </check_any>
+              <!-- is this a fleet manager and is the ship player owned... -->
+              <check_value value="event.object.assignedcontrolled.fleet.iscommander" />
+              <check_value value="event.object.assignedcontrolled.owner == faction.player" />
+            </conditions>
+             <actions>
+              <add_player_choice_sub text="'I want to optimise our fleet captains'" section="FleetCaptainSubMenu"/>
+              <debug_text text="'Conversation Match!'" chance="$JBMCaptainDebug" />
+            </actions>
+          </cue>
+          <cue name="FleetCaptainSubmenu" instantiate="true">
+            <conditions>
+              <check_any>
+                <event_conversation_next_section section="FleetCaptainSubMenu"/>
+                <event_conversation_returned_to_section section="FleetCaptainSubMenu"/>
+                <event_cue_signalled />
+              </check_any>
+            </conditions>
+            <actions>
+              <add_player_choice_sub text="'Assign my best Unallocated Captains to fleet...'" section="AssignCaptainsToFleet" position="top_left"/>
+               <add_player_choice_return text="'back...'" position="bottom_right" />
+            </actions>
+          </cue>
+          <cue name="FleetAssign" instantiate="true ">
+            <conditions>
+              <check_any>
+                <event_conversation_next_section section="AssignCaptainsToFleet"/>
+                <event_conversation_returned_to_section section="AssignCaptainsToFleet"/>
+                <event_cue_signalled />
+              </check_any>
+            </conditions>
+            <actions>
+              <!-- our event.object is the fleet manager... -->
+              <raise_lua_event name="'JBMCaptainShuffle'" param="event.object.assignedcontrolled" />
+              <write_to_logbook category="general" title="'Fleet Reassignment initiated... '" text="'Beginning reassignment for fleet %s with Flagship %s.'.[event.object.assignedcontrolled.fleet.name, event.object.assignedcontrolled.name]" />
+              <!-- 
+                Supporting info:
+                  Our people are entities, they have a skill of skilltype from 0-15. How do we get the most skilled 
+                
+              -->
+              <cancel_conversation actor="event.object" />
+            </actions>
+          </cue>
+          <cue name="JBMCSLuaActionEvent" instantiate="true">
+            <conditions>
+              <event_ui_triggered screen="'JBMShuffle'" control="$JBMlua_response" />
+            </conditions>
+            <actions>
+              <write_to_logbook category="general" title="'lua results'" text="$JBMlua_response" />
+            </actions>
+          </cue>
+          <!-- Disabling for now until we have everything working... 
+          <cue name="HQMgrChat" instantiate="true">
+             <conditions>
+                <check_any>
+                    <event_conversation_started conversation="default" />
+                </check_any>
+                <check_value value="player.headquarters.controlentity.{controlpost.manager} == event.object" comment="Is this our HQ Manager" />
+            </conditions>
+            <actions>
+              <add_player_choice_sub text="'My New Sub-Menu!'" section="CaptainSubMenu"/>
+              <debug_text text="'Conversation Match!'" chance="$JBMCaptainDebug" />
+            </actions>
+          </cue>
+            <cue name="CaptainSubMenu" instantiate="true">
+                <conditions>
+                    <check_any>
+                        <event_conversation_next_section section="CaptainSubMenu"/>
+                        <event_conversation_returned_to_section section="CaptainSubMenu"/>
+                        <event_cue_signalled />
+                    </check_any>
+                </conditions>
+                <actions>
+                    <add_player_choice_sub text="'Assign my best Unallocated Captains to fleet...'" section="AssignCaptains" position="top_left"/>
+                    <add_player_choice_return text="'back...'" position="bottom_right" />
+                </actions>
+            </cue>
+            <cue name="AssignCaptains" instantiate="true">
+              <conditions>
+                <check_any>
+                  <event_conversation_next_section section="AssignCaptains"/>
+                  <event_conversation_returned_to_section section="AssignCaptains"/>
+                  <event_cue_signalled />
+              </check_any>
+            </conditions>
+            <actions>
+
+              <cancel_conversation actor="event.object" />
+            </actions>
+          </cue>
+          -->
+        </cues>
+      </cue>
+  </cues>
+</mdscript>

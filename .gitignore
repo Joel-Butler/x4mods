@@ -5,3 +5,4 @@ savegame/
 build/
 .env
 x4mods.code-workspace
+.vscode/settings.json

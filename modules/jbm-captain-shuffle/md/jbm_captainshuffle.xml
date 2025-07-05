@@ -20,9 +20,9 @@
               <check_any>
                 <event_conversation_started conversation="default" />
               </check_any>
-              <!-- is this a fleet manager and is the ship player owned... -->
-              <check_value value="event.object.assignedcontrolled.fleet.iscommander" />
-              <check_value value="event.object.assignedcontrolled.owner == faction.player" />
+              <!-- is this a fleet manager and is the ship player owned... using '@' as we're not interested in errors if the value doesn't exist... -->
+              <check_value value="@event.object.assignedcontrolled.fleet.iscommander" />
+              <check_value value="@event.object.assignedcontrolled.owner == faction.player" />
             </conditions>
              <actions>
               <add_player_choice_sub text="'I want to optimise our fleet captains'" section="FleetCaptainSubMenu"/>
@@ -53,21 +53,18 @@
             <actions>
               <!-- our event.object is the fleet manager... -->
               <raise_lua_event name="'JBMCaptainShuffle'" param="event.object.assignedcontrolled" />
-              <write_to_logbook category="general" title="'Fleet Reassignment initiated... '" text="'Beginning reassignment for fleet %s with Flagship %s.'.[event.object.assignedcontrolled.fleet.name, event.object.assignedcontrolled.name]" />
-              <!-- 
-                Supporting info:
-                  Our people are entities, they have a skill of skilltype from 0-15. How do we get the most skilled 
-                
-              -->
               <cancel_conversation actor="event.object" />
+              <write_to_logbook category="general" title="'Fleet Reassignment initiated... '" text="'Beginning reassignment for fleet %s with Flagship %s.'.[event.object.assignedcontrolled.fleet.name, event.object.assignedcontrolled.name]" />
+              <reset_cue cue="this" />
             </actions>
           </cue>
           <cue name="JBMCSLuaActionEvent" instantiate="true">
             <conditions>
-              <event_ui_triggered screen="'JBMShuffle'" control="$JBMlua_response" />
+              <event_ui_triggered screen="'JBMShuffle'"/>
             </conditions>
             <actions>
-              <write_to_logbook category="general" title="'lua results'" text="$JBMlua_response" />
+              <write_to_logbook category="general" title="'lua results:'" text="event.param2" />
+              <reset_cue cue="this" />
             </actions>
           </cue>
           <!-- Disabling for now until we have everything working... 

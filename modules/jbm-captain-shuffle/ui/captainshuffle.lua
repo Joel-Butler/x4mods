@@ -26,12 +26,12 @@ ffi.cdef[[
 	int64_t GetCurrentUTCDataTime(void);
 	const char* GetUserData(const char* name);
    const char* GetFleetName(UniverseID controllableid);
-	uint64_t GetFleetUnit(UniverseID controllableid);
+   uint64_t GetFleetUnit(UniverseID controllableid);
    uint32_t GetAllFleetUnits(FleetUnitID* result, uint32_t resultlen, UniverseID controllableid);
    uint32_t GetNumFleetUnitSubordinateFleetUnits(FleetUnitID fleetunitid, int subordinategroupid);
    uint32_t GetNumFleetUnitSubordinates(FleetUnitID fleetunitid, int32_t subordinategroupid);
    uint32_t GetFleetUnitSubordinateFleetUnits(FleetUnitID* result, uint32_t resultlen, FleetUnitID fleetunitid, int subordinategroupid);
-	bool IsComponentClass(UniverseID componentid, const char* classname);
+   bool IsComponentClass(UniverseID componentid, const char* classname);
    const char* GetComponentName(UniverseID componentid);
 
    typedef struct {
@@ -91,8 +91,7 @@ function Captain_Shuffle.captainShuffle(_, params)
 			-- no: continue to the next captain (our ordered list means we assume that if the top is no good, the rest will not be either)
 			if(captain.skill < Captain_Shuffle.shuffleableEmployees[1].skill) then
 				AddUITriggeredEvent("JBMShuffle", "Identified potential transfer from : " .. captain.name .. " To: " .. Captain_Shuffle.shuffleableEmployees[1].name .. ".")
-				--now we need to figure out the best path to transfer... 
-				-- demote the captain 
+				--now we need to figure out the best path to transfer... There's a UI example of this we could leverage...
 			end
 		 end
          -- Report Done.
@@ -127,14 +126,19 @@ function Captain_Shuffle.loadEmployees()
    -- Derived from function menu.getEmployeeList() in menu_playerinfo.lua
 
 
-   -- we will probably want to hard-code the roles we want here... 
-   -- and sort by aipilot skill
+   -- While the menu allows sorting by different skills, we just want good captains, 
+   -- and want to exclude people doing an 'important' job - so effectively we want marines,
+   -- service crew and unassigned. 
+
+   -- TODO: It would be super nice to be able to also grab people from the terraform buckets. 
    local targetPost = "aipilot"
    local roles = { "marine", "service", "unassigned"}
    local role = "post:aipilot"
 
-	local numroles = C.GetNumAllRoles()
-	local peopletable = ffi.new("PeopleInfo[?]", numroles)
+	local rolemax = C.GetNumAllRoles()
+
+	-- interesting approach - using the max of potential people to create inner arrays/tables. 
+	local shipPeopleTable = ffi.new("PeopleInfo[?]", rolemax)
 
    -- this bit is straight from getEmployeeList()... 
    -- give the empire employee list an update to avoid referencing destroyed objects
@@ -144,38 +148,25 @@ function Captain_Shuffle.loadEmployees()
 	local numownedships = C.GetNumAllFactionShips("player")
 	local allownedships = ffi.new("UniverseID[?]", numownedships)
 	numownedships = C.GetAllFactionShips(allownedships, numownedships, "player")
+	-- Note - from a C array/table object, we need to do from 0 n-1
 	for i = 0, numownedships - 1 do
-		local locship = ConvertStringTo64Bit(tostring(allownedships[i]))
-		local shipmacro, isdeployable = GetComponentData(locship, "macro", "isdeployable")
-		local islasertower, locshipware = GetMacroData(shipmacro, "islasertower", "ware")
-		local isunit = C.IsUnit(locship)
-		if locshipware and (not isunit) and (not islasertower) and (not isdeployable) then
-			local shipname, pilot, isdeployable = GetComponentData(locship, "name", "assignedaipilot", "isdeployable")
-			shipname = shipname .. " (" .. ffi.string(C.GetObjectIDCode(locship)) .. ")"
-			-- ignoring active pilots... 
-         	-- if pilot and IsValidComponent(pilot) then
-            -- we do not want active pilots in our list... 
-				-- local name, combinedskill, poststring, postname = GetComponentData(pilot, "name", "combinedskill", "poststring", "postname")
-				-- table.insert(empireemployees, { id = ConvertIDTo64Bit(pilot), type = "entity", name = name, combinedskill = combinedskill, roleid = poststring, rolename = postname, container = locship, containername = shipname })
-				-- numhiredpersonnel = numhiredpersonnel + 1
-            -- 
-			-- end
-			local locnumroles = C.GetPeople2(peopletable, numroles, locship, true)
-			for i = 0, locnumroles - 1 do
-				numhiredpersonnel = numhiredpersonnel + peopletable[i].amount
-				local roleid = ffi.string(peopletable[i].id)
-				local rolename = ffi.string(peopletable[i].name)
-				local numtiers = peopletable[i].numtiers
-				--print("role: " .. tostring(roleid) .. ", rolename: " .. tostring(rolename) .. ", numtiers: " .. tostring(numtiers))
+		local aship = ConvertStringTo64Bit(tostring(allownedships[i]))
+		if(Captain_Shuffle.isShip(aship)) then
+			local shipPeopleCount = C.GetPeople2(shipPeopleTable, rolemax, aship, true)
+			for i = 0, shipPeopleCount - 1 do
+				numhiredpersonnel = numhiredpersonnel + shipPeopleTable[i].amount
+				local roleid = ffi.string(shipPeopleTable[i].id)
+				local numtiers = shipPeopleTable[i].numtiers
+				-- I'm unclear on the use of tiers here... we've got People, now we're inserting based on a new call of GetRoleTIerNPCs?
 				if numtiers > 0 then
 					local tiertable = ffi.new("RoleTierData[?]", numtiers)
-					numtiers = C.GetRoleTiers(tiertable, numtiers, locship, peopletable[i].id)
+					numtiers = C.GetRoleTiers(tiertable, numtiers, aship, shipPeopleTable[i].id)
 					for j = 0, numtiers - 1 do
 						local numpersons = tiertable[j].amount
 						if numpersons > 0 then
-							local persontable = GetRoleTierNPCs(locship, roleid, tiertable[j].skilllevel)
+							local persontable = GetRoleTierNPCs(aship, roleid, tiertable[j].skilllevel)
 							for k, person in ipairs(persontable) do
-								table.insert(empireemployees, { id = person.seed, type = "person", name = person.name, combinedskill = person.combinedskill, roleid = roleid, rolename = rolename, container = locship, containername = shipname })
+								table.insert(empireemployees, { id = person.seed, name = person.name, combinedskill = person.combinedskill, roleid = roleid, container = aship})
 							end
 						end
 					end
@@ -184,7 +175,7 @@ function Captain_Shuffle.loadEmployees()
 					--print("numpersons: " .. tostring(#persontable))
 					for k, person in ipairs(persontable) do
 						--print(k .. ": " .. person.name)
-						table.insert(empireemployees, { id = person.seed, type = "person", name = person.name, combinedskill = person.combinedskill, roleid = roleid, rolename = rolename, container = locship, containername = shipname })
+						table.insert(empireemployees, { id = person.seed, name = person.name, combinedskill = person.combinedskill, roleid = roleid, container = aship})
 					end
 				end
 			end
@@ -200,18 +191,28 @@ function Captain_Shuffle.loadEmployees()
 		else
 			employeedata.skill = C.GetEntityCombinedSkill(C.ConvertStringTo64Bit(tostring(employeedata.id)), role, targetPost)
 		end
-		
 		table.insert(filteredemployees, employeedata)
 		numfilteredemployees = numfilteredemployees +1
 	end
-
-
 	Captain_Shuffle.shuffleableEmployees = filteredemployees
 	Captain_Shuffle.numShuffleableEmployees = numfilteredemployees
-	
+	-- Sort avaialable employees by captain skill. 
+   	Captain_Shuffle.sortEmployees()
+end
 
-   -- this loads our employees... now we need to sort them... 
-
+function Captain_Shuffle.isShip(component)
+		--we're expecting a uint64_t that is a component.
+		if(C.IsComponentClass(component, "ship")) then 
+			
+			local macro, isdeployable = GetComponentData(component, "macro", "isdeployable")
+			local islasertower, ware = GetMacroData(macro, "islasertower", "ware")
+			local isunit = C.IsUnit(component)
+			-- does this contain stuff, while not being a deployable, laser tower or a unit...
+			-- TODO: Is there a more efficient comparision here to determine ships with NPCs onboard? 
+			return ware and (not isunit) and (not islasertower) and (not isdeployable) 
+		else
+			return false
+		end
 end
 
 function Captain_Shuffle.loadCaptains()

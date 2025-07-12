@@ -6,6 +6,8 @@ A more detailed overview of the mods and documentation is available at:
 
 https://joel-butler.github.io/x4mods/
 
+These mods are enabled by Egosoft and inspired by various other modders. Of particular note: 
+
 
 ## Tools and Scripts
 1. generatecats.bat - a batch file able to generate from a working install of X4 (and the presence of the X4 Catalog tool) the extracted resources required for modding.

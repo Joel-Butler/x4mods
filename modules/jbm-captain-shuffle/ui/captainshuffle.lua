@@ -92,9 +92,27 @@ function Captain_Shuffle.captainShuffle(_, params)
 			if(captain.skill < Captain_Shuffle.shuffleableEmployees[1].skill) then
 				AddUITriggeredEvent("JBMShuffle", "Identified potential transfer from : " .. captain.name .. " To: " .. Captain_Shuffle.shuffleableEmployees[1].name .. ".")
 				--now we need to figure out the best path to transfer... There's a UI example of this we could leverage...
+				-- 1. Do we have room? If yes we use the MD command as demonstrated in menu_playerinfo.lua line 6696 (may not work, assumes person is already on ship.)
+				-- Update: I think we actually want the process from menu_map.lua line 22920 for exchanging crew... This does require crew to be unassigned on a captainable ship though... 
+				
+				--Updated logic:
+				-- 1. We know the person to transfer is on a ship and is *not* the captain. We'll temporarily make them one, and then set the real captain back. 
+				local shuffleCaptain = GetComponentData(Captain_Shuffle.shuffleableEmployees[1].container, "assignedaipilot")
+				local shuffleCaptain64 = ConvertIDTo64Bit(shuffleCaptain)
+				if shuffleCaptain64 and IsValidComponent(shuffleCaptain64) then
+					-- demote captain and promote our person.
+					C.SignalObjectWithNPCSeed(shuffleCaptain64, "npc__control_dismissed", ConvertIDTo64Bit(Captain_Shuffle.shuffleableEmployees[1].id),  ConvertIDTo64Bit(Captain_Shuffle.shuffleableEmployees[1].container))
+					-- this should promote our other captain temporarily...				
+					local result = C.PerformCrewExchange2(ConvertIDTo64Bit(captain.container), ConvertIDTo64Bit(Captain_Shuffle.shuffleableEmployees[1].container), nil, 0, nil, 0, captain, Captain_Shuffle.shuffleableEmployees[1].id, true, false)
+					local reason = ffi.string(result.reason)
+					AddUITriggeredEvent("JBMShuffle", "Transfer Result: " .. reason .. ".")
+					table.remove(Captain_Shuffle.shuffleableEmployees, 1)
+
+					
+				end
 			end
 		 end
-         -- Report Done.
+         AddUITriggeredEvent("JBMShuffle", "Done with shuffle - moves are triggered via MD.")
          
       else 
          AddUITriggeredEvent("JBMShuffle", "No subordinates for Controllable " .. 
@@ -186,18 +204,13 @@ function Captain_Shuffle.loadEmployees()
 	local filteredemployees = {}
 	local numfilteredemployees = 0
 	for _, employeedata in ipairs(empireemployees) do
-		if employeedata.type == "person" then
-			employeedata.skill = C.GetPersonCombinedSkill(C.ConvertStringTo64Bit(tostring(employeedata.container)), C.ConvertStringTo64Bit(tostring(employeedata.id)), role, targetPost)
-		else
-			employeedata.skill = C.GetEntityCombinedSkill(C.ConvertStringTo64Bit(tostring(employeedata.id)), role, targetPost)
-		end
+		-- Everyone should be a person as that's all we've inserted... 
+		employeedata.skill = C.GetPersonCombinedSkill(C.ConvertStringTo64Bit(tostring(employeedata.container)), C.ConvertStringTo64Bit(tostring(employeedata.id)), role, targetPost)
 		table.insert(filteredemployees, employeedata)
 		numfilteredemployees = numfilteredemployees +1
 	end
 	Captain_Shuffle.shuffleableEmployees = filteredemployees
 	Captain_Shuffle.numShuffleableEmployees = numfilteredemployees
-	-- Sort avaialable employees by captain skill. 
-   	Captain_Shuffle.sortEmployees()
 end
 
 function Captain_Shuffle.isShip(component)

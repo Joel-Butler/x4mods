@@ -125,9 +125,16 @@ function Captain_Shuffle.captainShuffle(_, params)
 							-- we now make a list of NPC Seeds to move... we'll need the seed for the captain... 
 							local leftnpcs = ffi.new("NPCSeed[?]", 1)
 							local rightnpcs = ffi.new("NPCSeed[?]", 1)
+							local rightnpcCount = 0
+
+							local rightNPC = Captain_Shuffle.getLowSkillNPC(captain.containerId, "service")
 
 							leftnpcs[0] = inboundCaptain
-							rightnpcs[0] = demoteCaptain
+							
+							if(rightNPC ~= nil) then 
+								rightnpcs[0] = C.ConvertStringTo64Bit(tostring(rightNPC))
+								rightnpcCount = 1
+							end
 
 							-- Ego example: local result = C.PerformCrewExchange2(
 						    --		menu.contextMenuData.leftShip, 
@@ -140,7 +147,7 @@ function Captain_Shuffle.captainShuffle(_, params)
 							--		captainfromright, 
 							--		exchangecaptains, 
 							--		checkonly)
-							local result = C.PerformCrewExchange2(shuffleShip64, targetShip64, leftnpcs, 1, rightnpcs, 0, inboundCaptain, 0, false, false)
+							local result = C.PerformCrewExchange2(shuffleShip64, targetShip64, leftnpcs, 1, rightnpcs, rightnpcCount, inboundCaptain, 0, false, false)
 							local reason = ffi.string(result.reason)
 							AddUITriggeredEvent("JBMShuffle", "Transfer Result: " .. reason .. ".")
 						else
@@ -166,6 +173,70 @@ function Captain_Shuffle.captainShuffle(_, params)
     	AddUITriggeredEvent("JBMShuffle", "Invalid object passed to Lua (ComponentClass is not 'ship')")
    
    	end
+end
+
+
+-- function: Captain_Shuffle.getLowSkillUnit(component) given a container object
+-- returns a single NPC at the bottom of the skill rung in 'service' we can use to ensure an equivalent
+-- transfer of crew to avoid overfilling ships.
+-- note - there's some code duplication here i should clean up...
+
+function Captain_Shuffle.getLowSkillNPC(component, rolename) 
+	local rolemax = C.GetNumAllRoles()
+	local shipPeopleTable = ffi.new("PeopleInfo[?]", rolemax)
+	local shipPersonnel = 0
+	local shipemployees = {}
+	if Captain_Shuffle.isShip(component) and rolename == "service" or rolename == "marine" or rolename == "unassigned" then 
+		-- get all ship people in our specified role - skill level is automatically by this role, so we can skip the additional calculation of skills.
+		local shipPeopleCount = C.GetPeople2(shipPeopleTable, rolemax, component, true)
+		for i = 0, shipPeopleCount - 1 do
+			shipPersonnel = shipPersonnel + shipPeopleTable[i].amount
+			local roleid = ffi.string(shipPeopleTable[i].id)
+			local numtiers = shipPeopleTable[i].numtiers
+			-- I'm unclear on the use of tiers here... we've got People, now we're inserting based on a new call of GetRoleTIerNPCs?
+			if numtiers > 0 and roleid == rolename then
+				local tiertable = ffi.new("RoleTierData[?]", numtiers)
+				numtiers = C.GetRoleTiers(tiertable, numtiers, component, shipPeopleTable[i].id)
+				for j = 0, numtiers - 1 do
+					local numpersons = tiertable[j].amount
+					if numpersons > 0 then
+						local persontable = GetRoleTierNPCs(component, roleid, tiertable[j].skilllevel)
+						for k, person in ipairs(persontable) do
+							table.insert(shipemployees, { id = person.seed, name = person.name, combinedskill = person.combinedskill, roleid = roleid, container = component})
+						end
+					end
+				end
+			elseif roleid == "unassigned" and roleid == rolename then
+				-- note: for unassigned we're just going to pick the first one. 
+				local persontable = GetRoleTierNPCs(component, roleid, 0)
+				--print("numpersons: " .. tostring(#persontable))
+				for k, person in ipairs(persontable) do
+					--print(k .. ": " .. person.name)
+					table.insert(shipemployees, { id = person.seed, name = person.name, combinedskill = person.combinedskill, roleid = roleid, container = component})
+				end
+			end
+		end
+		if(#shipemployees > 0) then
+			if(roleid == "unassigned" ) then 
+			-- the first unassigned person will do.
+				return shipemployees[1].id
+			end
+			-- let's sort first in ascending order of skill. 
+			table.sort(shipemployees, 
+				function (a, b) 
+					return Captain_Shuffle.skillSorter(a, b, true)
+				end
+			)
+			-- we should now have the least useful person in 'role' as item 1
+			return shipemployees[1].id
+		else
+			-- we don't have any employees available of this type.
+			return nil
+		end		
+	else
+		-- invalid parameters passed (either we don't have a ship or an appropriate role), we'll just return nil.
+		return nil
+	end
 end
 
 function Captain_Shuffle.loadEmployees()

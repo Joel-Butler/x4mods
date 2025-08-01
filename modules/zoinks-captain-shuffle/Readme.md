@@ -8,4 +8,11 @@ SirNukes and the community that have maintained UI loading features.
 Egosoft - without the existing UI examples I would not have managed to figure this all out.
 
 ## Current status
-Broken - it's not quite there. The dialog works, we can get a list of captains and potential employees that can be transferred, the actual crew exchange logic is a bit messy though and is where I am currently working through.
+Almost there - initial tests appear positive but I'd like to clean up some of the Lua code, add some additional catches for errors and remove some of the debug and feedback output I have included while I was working this out.
+
+## To-do
+1. Add translations using machine generated translation data for now.
+2. Adjust log data so that machine generated translation can be used as part of communication.
+3. Clean up Lua code.
+4. Finalise mod ids and name. 
+5. Release.

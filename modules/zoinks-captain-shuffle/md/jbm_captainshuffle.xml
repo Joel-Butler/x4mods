@@ -25,7 +25,7 @@
               <check_value value="@event.object.assignedcontrolled.owner == faction.player" />
             </conditions>
              <actions>
-              <add_player_choice_sub text="'I want to optimise our fleet captains'" section="FleetCaptainSubMenu"/>
+              <add_player_choice_sub text="{356004,10003}" section="FleetCaptainSubMenu"/>
               <debug_text text="'Conversation Match!'" chance="$JBMCaptainDebug" />
             </actions>
           </cue>
@@ -38,8 +38,8 @@
               </check_any>
             </conditions>
             <actions>
-              <add_player_choice_sub text="'Assign my best Unallocated Captains to fleet...'" section="AssignCaptainsToFleet" position="top_left"/>
-               <add_player_choice_return text="'back...'" position="bottom_right" />
+              <add_player_choice_sub text="{356004,10001}" section="AssignCaptainsToFleet" position="top_left"/>
+               <add_player_choice_return text="{356004,10002}" position="bottom_right" />
             </actions>
           </cue>
           <cue name="FleetAssign" instantiate="true ">

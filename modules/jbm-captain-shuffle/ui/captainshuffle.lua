@@ -63,16 +63,17 @@ local function init()
 end
 
 
--- function 
+-- function captainShuffle is called from MD and expects its context to be the fleet owner.
+-- from there it will iterate over sub fleet items and attempt to assign a better captain to each item based on
+-- available employees - available meaining any better pilot currently working as a service, marine or unassigned role.
 function Captain_Shuffle.captainShuffle(_, params)
-   -- Okay - that worked and we got a result... that is real progress!
-   -- from menumap it looks like this created an appropriate entity object entity = ConvertStringTo64Bit(tostring(menu.modeparam[2]))
-   -- did we get the ship we expected? 
    AddUITriggeredEvent("JBMShuffle", "Starting Lua")
    local controllable = C.ConvertStringTo64Bit(tostring(params))
 	if(C.IsComponentClass(controllable, "ship")) then
 		local subordinates = GetSubordinates(params)
 		Captain_Shuffle.fleetUnits = subordinates
+		-- TODO: We currently only go one level deep - can we do this for all fleet units?
+		-- could we filter for ship type as part of the request? 
 		Captain_Shuffle.numFleetUnits = #subordinates
 		if Captain_Shuffle.numFleetUnits > 0 then
 				AddUITriggeredEvent("JBMShuffle", "It worked, got ".. tostring(Captain_Shuffle.numFleetUnits) .. " subordinates.")
@@ -119,30 +120,27 @@ function Captain_Shuffle.captainShuffle(_, params)
 					-- do we have a valid ship and existing captain... 
 					if shuffleCaptain and IsValidComponent(shuffleCaptain) then
 						if(C.IsComponentClass(shuffleShip64, "ship")) then 
-							DebugError("Attempting to set employee : " .. tostring(inboundCaptain) .. " and ship: " ..tostring(shuffleShip64) .. " via MD." )
+							-- DebugError("Attempting to set employee : " .. tostring(inboundCaptain) .. " and ship: " ..tostring(shuffleShip64) .. " via MD." )
 							-- C.SignalObjectWithNPCSeed(shuffleCaptain64, "npc__control_dismissed", inboundCaptain, shuffleShip64)
 							-- we now make a list of NPC Seeds to move... we'll need the seed for the captain... 
 							local leftnpcs = ffi.new("NPCSeed[?]", 1)
 							local rightnpcs = ffi.new("NPCSeed[?]", 1)
 
-							-- todo - the captain to be removed doesn't have an NPCSeed - we'll need to demote them and probably just select a 'spare' person to move. 
-							-- for now let's just test moving when there is room.
+							leftnpcs[0] = inboundCaptain
+							rightnpcs[0] = demoteCaptain
 
-							-- leftnpcs[0] = demoteCaptain
-							rightnpcs[0] = inboundCaptain
-
-							-- UICrewExchangeResult PerformCrewExchange2(UniverseID controllableid, 
-							-- UniverseID partnercontrollableid, 
-							-- NPCSeed* npcs, 
-							-- uint32_t numnpcs, 
-							-- NPCSeed* partnernpcs, 
-							-- uint32_t numpartnernpcs, 
-							-- NPCSeed captainfromcontainer, 
-							-- NPCSeed captainfrompartner, 
-							-- bool exchangecaptains, 
-							-- bool checkonly);
-
-							local result = C.PerformCrewExchange2(shuffleShip64, targetShip64, nil, 0, rightnpcs, 1, 0, inboundCaptain, false, false)
+							-- Ego example: local result = C.PerformCrewExchange2(
+						    --		menu.contextMenuData.leftShip, 
+							--		menu.contextMenuData.rightShip, 
+							--		leftnpcs, 
+							--		menu.contextMenuData.crew.left.moved, 
+							--		rightnpcs, 
+							--		menu.contextMenuData.crew.right.moved, 
+							--		captainfromleft, 
+							--		captainfromright, 
+							--		exchangecaptains, 
+							--		checkonly)
+							local result = C.PerformCrewExchange2(shuffleShip64, targetShip64, leftnpcs, 1, rightnpcs, 0, inboundCaptain, 0, false, false)
 							local reason = ffi.string(result.reason)
 							AddUITriggeredEvent("JBMShuffle", "Transfer Result: " .. reason .. ".")
 						else
@@ -170,95 +168,21 @@ function Captain_Shuffle.captainShuffle(_, params)
    	end
 end
 
-
--- given a controllable that we can trace to an AIPilot, get the NPCSeed for that person/entity.
-function Captain_Shuffle.getCaptainNPCSeed(controllableId)
-	DebugError("Given controllable: " .. tostring(controllableId))
-	local component = C.ConvertStringTo64Bit(tostring(controllableId))
-	-- step 1 - what have we been given as an object? 
-	local ship = nil
-	if(C.IsComponentClass(component, "ship")) then 
-		ship = component
-	else 
-		if (C.IsComponentClass(component, "npc")) then 
-			-- we'll just directly query the npctemplate value.
-			ship = GetComponentData(controllableId, "assignedcontrolled")
-			local npctemplate = GetComponentData(controllableId, "npctemplate")
-			DebugError("NPCTemplate: " .. tostring(npctemplate))
-			return C.ConvertStringTo64Bit(tostring(npctemplate))
-		else 
-			--not sure how to proceed here, but let's leave this open to future scenarios
-			return nil
-		end
-	end
-	if ship ~= nil then
-		-- error is in here... 
-		
-		DebugError("getCaptainNPCSeed - Component is ship.")
-		-- get all people on the ship and loop until we have the person with role "aipilot"
-		local totalcrewcount = GetComponentData(controllableId, "assignedaipilot") and 1 or 0
-		local numroles = C.GetNumAllRoles()
-		-- seems inefficient to create a table that has enough room for all employees, but that seems to be the default approach. 
-		local cappeopletable = ffi.new("PeopleInfo[?]", numroles)
-		-- we don't need to include 'arriving' people for this one so last parameter can be false
-		numroles = C.GetPeople2(cappeopletable, numroles, component, false)
-		DebugError("Number of roles in total are: " .. tostring(numroles))
-		for i = 0, numroles - 1 do
-			totalcrewcount = totalcrewcount + cappeopletable[i].amount	
-		end
-		DebugError("Number of crew in ship is: " .. tostring(totalcrewcount))
-		-- we should now have all crew listed as part of 'peopletable' and a total count of totalcrewcount. Let's find the captain/pilot
-		
-
-		for i =0, numroles -1 do 
-			-- we're only interested in role 'aipilot'
-			-- suspect issue is in ffi.string()
-			local roleid = ffi.string(cappeopletable[i].id)
-			local numtiers = cappeopletable[i].numtiers
-			DebugError("Found role " .. roleid .." on iteration " .. tostring(i))
-			-- if roleid == "aipilot" then
-			--	-- we loop until we find the captain... super inefficient but I haven't found a better way.
-			--	-- TODO: Add this into the shuffleEmployees list routine as a second table perhaps (insert captains, seed ID and Ship?)
-			--		for j = 0, numtiers - 1 do
-			--			if numtiers > 0 then
-			--			local tiertable = ffi.new("RoleTierData[?]", numtiers)
-			--			numtiers = C.GetRoleTiers(tiertable, numtiers, ship, cappeopletable[i].id)
-			--				local numpersons = tiertable[j].amount
-			--				if numpersons > 0 then
-			--					local persontable = GetRoleTierNPCs(ship, roleid, tiertable[j].skilllevel)
-			--					for k, person in ipairs(persontable) do
-			--						-- there should only be one... 
-			--						DebugError("Found NPC Seed: " .. tostring(person.seed))
-			--						return C.ConvertStringTo64Bit(tostring(person.seed))
-			--					end
-			--				end
-			--			end
-			--		end
-			--	
-			--end
-		end
-		return nil
-	else 
-		DebugError("Invalid object passed to GetCaptainNPCSeed, expecting entity or ship.")
-	end
-
-
-end
 function Captain_Shuffle.loadEmployees()
-
-   -- todo: We want role of captain, but we only want people in role Marine, Unassigned or Service
+   -- We want people sorted by their skillset for pilot
+   -- but we only want people in role Marine, Unassigned or Service
    -- unassigned: roleid == "unassigned"
    -- roleID for captain: aipilot
    -- 
    -- Ego do this by iterating over each ship and station... we'll need to do the same. 
    -- Derived from function menu.getEmployeeList() in menu_playerinfo.lua
 
-
    -- While the menu allows sorting by different skills, we just want good captains, 
    -- and want to exclude people doing an 'important' job - so effectively we want marines,
    -- service crew and unassigned. 
 
-   -- TODO: It would be super nice to be able to also grab people from the terraform buckets. 
+   -- TODO: It would be super nice to be able to also grab people from the terraforming buckets
+   -- a task for later... 
    local targetPost = "aipilot"
    local roles = { "marine", "service", "unassigned"}
    local role = "post:aipilot"
@@ -330,7 +254,7 @@ function Captain_Shuffle.isShip(component)
 			local macro, isdeployable = GetComponentData(component, "macro", "isdeployable")
 			local islasertower, ware = GetMacroData(macro, "islasertower", "ware")
 			local isunit = C.IsUnit(component)
-			-- does this contain stuff, while not being a deployable, laser tower or a unit...
+			-- Does this object contain stuff, while not being a deployable, laser tower or a unit...
 			-- TODO: Is there a more efficient comparision here to determine ships with NPCs onboard? 
 			return ware and (not isunit) and (not islasertower) and (not isdeployable) 
 		else

@@ -67,32 +67,32 @@ end
 -- from there it will iterate over sub fleet items and attempt to assign a better captain to each item based on
 -- available employees - available meaining any better pilot currently working as a service, marine or unassigned role.
 function Captain_Shuffle.captainShuffle(_, params)
-   AddUITriggeredEvent("JBMShuffle", "Starting Lua")
+   -- AddUITriggeredEvent("JBMShuffle", "Starting Lua")
    local controllable = C.ConvertStringTo64Bit(tostring(params))
 	if(C.IsComponentClass(controllable, "ship")) then
 		local subordinates = GetSubordinates(params)
+		local actionText = ""
 		Captain_Shuffle.fleetUnits = subordinates
 		-- TODO: We currently only go one level deep - can we do this for all fleet units?
 		-- could we filter for ship type as part of the request? 
 		Captain_Shuffle.numFleetUnits = #subordinates
 		if Captain_Shuffle.numFleetUnits > 0 then
-				AddUITriggeredEvent("JBMShuffle", "It worked, got ".. tostring(Captain_Shuffle.numFleetUnits) .. " subordinates.")
-
+			-- AddUITriggeredEvent("JBMShuffle", "It worked, got ".. tostring(Captain_Shuffle.numFleetUnits) .. " subordinates.")s
 			-- TODO: Get captains and skills - create table of ships and captains - generate combined captain skill 
 				Captain_Shuffle.loadCaptains()
 			-- TODO: Create table of crew in Marine, Unassigned and Service roles sorted by combined captain skill (highest to lowest)
 				Captain_Shuffle.loadEmployees()
-				AddUITriggeredEvent("JBMShuffle", "Shufflable Employee count is: ".. tostring(Captain_Shuffle.numShuffleableEmployees) .. ".")
+				-- AddUITriggeredEvent("JBMShuffle", "Shufflable Employee count is: ".. tostring(Captain_Shuffle.numShuffleableEmployees) .. ".")
 				Captain_Shuffle.sortEmployees()
 				-- Lua ipars tables appear to start at 1
-				AddUITriggeredEvent("JBMShuffle", "Empoyees sorted Top Captain candidate is: ".. Captain_Shuffle.shuffleableEmployees[1].name .. ".")
+				-- AddUITriggeredEvent("JBMShuffle", "Empoyees sorted Top Captain candidate is: ".. Captain_Shuffle.shuffleableEmployees[1].name .. ".")
 			-- TODO: For each captain in list, if the first (best) potential captain is better skilled, transfer. 
 			for _, captain in ipairs(Captain_Shuffle.fleetCaptains) do
 				--is the top shuffleableEmployee more skilled? 
 				--yes : transfer and remove the transferred employee from the table. 
 				-- no: continue to the next captain (our ordered list means we assume that if the top is no good, the rest will not be either)
 				if(captain.skill < Captain_Shuffle.shuffleableEmployees[1].skill) then
-					AddUITriggeredEvent("JBMShuffle", "Identified potential transfer from : " .. captain.name .. " To: " .. Captain_Shuffle.shuffleableEmployees[1].name .. ".")
+					-- AddUITriggeredEvent("JBMShuffle", "Identified potential transfer from : " .. captain.name .. " To: " .. Captain_Shuffle.shuffleableEmployees[1].name .. ".")
 					--now we need to figure out the best path to transfer... There's a UI example of this we could leverage...
 					-- 1. Do we have room? If yes we use the MD command as demonstrated in menu_playerinfo.lua line 6696 (may not work, assumes person is already on ship.)
 					-- Update: I think we actually want the process from menu_map.lua line 22920 for exchanging crew... This does require crew to be unassigned on a captainable ship though... 
@@ -106,17 +106,12 @@ function Captain_Shuffle.captainShuffle(_, params)
 					local shuffleCaptainName = GetComponentData(shuffleCaptain, "name")
 					--local targetShip = captain.container
 					local targetShip64 = C.ConvertStringTo64Bit(tostring(captain.containerId))
-					DebugError("Working with ship: " .. tostring(captain.containerId))
 					-- local captainNPC = Captain_Shuffle.getCaptainNPCSeed(captain.containerId)
 					-- update - entities do not appear to have seeds... not quite sure how we transfer them, maybe just with their entity id? 
-
-
 					-- let's get all the default 'person' stuff
 								-- get real NPC if instantiated
-					local instance = C.GetInstantiatedPerson(inboundCaptain, shuffleShip64)
-					local entity = (instance ~= 0 and instance or nil)
 
-					AddUITriggeredEvent("JBMShuffle", "Transfer Plan for Captain: " .. shuffleCaptainName .. ", ship: ".. shipname  .. "New Pilot:" .. Captain_Shuffle.shuffleableEmployees[1].name ..  " seed: " .. tostring(Captain_Shuffle.shuffleableEmployees[1].id)  ..".")
+					-- AddUITriggeredEvent("JBMShuffle", "Transfer Plan for Captain: " .. shuffleCaptainName .. ", ship: ".. shipname  .. "New Pilot:" .. Captain_Shuffle.shuffleableEmployees[1].name ..  " seed: " .. tostring(Captain_Shuffle.shuffleableEmployees[1].id)  ..".")
 					-- do we have a valid ship and existing captain... 
 					if shuffleCaptain and IsValidComponent(shuffleCaptain) then
 						if(C.IsComponentClass(shuffleShip64, "ship")) then 
@@ -149,19 +144,21 @@ function Captain_Shuffle.captainShuffle(_, params)
 							--		checkonly)
 							local result = C.PerformCrewExchange2(shuffleShip64, targetShip64, leftnpcs, 1, rightnpcs, rightnpcCount, inboundCaptain, 0, false, false)
 							local reason = ffi.string(result.reason)
-							AddUITriggeredEvent("JBMShuffle", "Transfer Result: " .. reason .. ".")
+							-- AddUITriggeredEvent("JBMShuffle", "Transfer Result: " .. reason .. ".")
+							actionText = actionText .. captain.name .. " => " ..  Captain_Shuffle.shuffleableEmployees[1].name .. " => " .. shipname  .."\n"
 						else
 								DebugError("captainshuffle: failed setting new pilot.")
 						end
 						table.remove(Captain_Shuffle.shuffleableEmployees, 1)
 					else
-						AddUITriggeredEvent("JBMShuffle", "Invalid ship for listed shuffle.")
+						-- AddUITriggeredEvent("JBMShuffle", "Invalid ship for listed shuffle.")
 					end
 				end
 			end
-			AddUITriggeredEvent("JBMShuffle", "Done with shuffle - moves are triggered via MD.")
-		else 
-			AddUITriggeredEvent("JBMShuffle", "No subordinates for Controllable " .. 
+			AddUITriggeredEvent("JBMShuffleResults", actionText)
+			-- AddUITriggeredEvent("JBMShuffle", "Done with shuffle - moves are triggered via MD.")
+		else
+			DebugError("captainshuffle: No subordinates for Controllable " .. 
 			tostring(params) .. " name: " .. 
 			ffi.string(C.GetComponentName(controllable)) ..
 			" fleet: " ..
@@ -170,8 +167,7 @@ function Captain_Shuffle.captainShuffle(_, params)
 			)
 		end
    	else 
-    	AddUITriggeredEvent("JBMShuffle", "Invalid object passed to Lua (ComponentClass is not 'ship')")
-   
+    	AddDebugErrorUITriggeredEvent("captainshuffle: Invalid object passed to Lua (ComponentClass is not 'ship')")
    	end
 end
 
